@@ -1,5 +1,5 @@
-// server is a package that has convient methods for configuring and running a simple http/https server
-package server
+// simpleserver is a package that has convient methods for configuring and running a simple http/https server
+package simpleserver
 
 import (
 	"context"
