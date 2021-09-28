@@ -14,9 +14,11 @@ import (
 
 // Server is the struct for configuring a server
 type Server struct {
-	Port    int
-	Addr    string
-	Handler http.Handler
+	Port         int
+	Addr         string
+	Handler      http.Handler
+	WriteTimeout time.Duration
+	ReadTimeout  time.Duration
 	// ShutdownTimeout timeout for server to gracefully shutdown
 	ShutdownTimeout time.Duration
 	srv             http.Server
@@ -52,6 +54,20 @@ func WithHandler(h http.Handler) serverOpt {
 	}
 }
 
+// WithWriteTimeout configures http.WriteTimeout
+func WithWriteTimeout(t time.Duration) serverOpt {
+	return func(s *Server) {
+		s.WriteTimeout = t
+	}
+}
+
+// WithReadTimeout configures http.WriteTimeout
+func WithReadTimeout(t time.Duration) serverOpt {
+	return func(s *Server) {
+		s.ReadTimeout = t
+	}
+}
+
 // WithCorsHandler wraps an http.Handler the configured cors options
 func WithCorsHandler(h http.Handler, c cors.Options) serverOpt {
 	return func(s *Server) {
@@ -66,6 +82,8 @@ func NewServer(opts ...serverOpt) *Server {
 		Port:            8080,
 		Addr:            "",
 		ShutdownTimeout: 15 * time.Second,
+		ReadTimeout:     15 * time.Second,
+		WriteTimeout:    15 * time.Second,
 	}
 
 	for _, opt := range opts {
@@ -107,8 +125,8 @@ func (s *Server) Run() error {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", s.Addr, s.Port),
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
+		WriteTimeout: s.WriteTimeout,
+		ReadTimeout:  s.ReadTimeout,
 		IdleTimeout:  time.Second * 60,
 		Handler:      s.Handler,
 	}
