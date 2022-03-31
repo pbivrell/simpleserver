@@ -19,12 +19,22 @@ type Server struct {
 	Handler      http.Handler
 	WriteTimeout time.Duration
 	ReadTimeout  time.Duration
+	CertFile     string
+	KeyFile      string
 	// ShutdownTimeout timeout for server to gracefully shutdown
 	ShutdownTimeout time.Duration
 	srv             http.Server
 }
 
 type serverOpt func(s *Server)
+
+// WithTLS configures server to use TLS
+func WithTLS(certFile, keyFile string) serverOpt {
+	return func(s *Server) {
+		s.CertFile = certFile
+		s.KeyFile = keyFile
+	}
+}
 
 // WithShutdwonTimeout configures Server with provided timeout
 func WithShutdownTimeout(t time.Duration) serverOpt {
@@ -129,6 +139,10 @@ func (s *Server) Run() error {
 		ReadTimeout:  s.ReadTimeout,
 		IdleTimeout:  time.Second * 60,
 		Handler:      s.Handler,
+	}
+
+	if s.CertFile != "" && s.KeyFile != "" {
+		return srv.ListenAndServeTLS(s.CertFile, s.KeyFile)
 	}
 
 	return srv.ListenAndServe()
